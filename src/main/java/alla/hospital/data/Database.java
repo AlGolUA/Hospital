@@ -5,11 +5,13 @@ import alla.hospital.model.Doctor;
 import alla.hospital.model.Sick;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Database {
     private static final Database instance = new Database();
+    private static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd.MM.YYYY");
 
     private List<Sick> sicks;
     private List<Bulk> bulks;
@@ -51,6 +53,14 @@ public class Database {
         for (int i = 0; i < doctors.size(); i++) {
             Doctor tmpDoctor = doctors.get(i);
             String s = String.format("%d;%s;%s;%s;%s", tmpDoctor.getId(), tmpDoctor.getFirstName(), tmpDoctor.getMiddleName(), tmpDoctor.getLastName(), tmpDoctor.getPhone(), tmpDoctor.getAddress());
+            fileWriter.write(s+'\n');
+        }
+        fileWriter.write("Sicks;" + sicks.size()+'\n');
+        for (int i = 0; i < sicks.size(); i++) {
+            Sick tmpSick = sicks.get(i);
+            String s = String.format("%d;%s;%s;%s;%s;%s;%s;%s;%d;%d",
+                    tmpSick.getId(), tmpSick.getFirstName(), tmpSick.getMiddleName(), tmpSick.getLastName(), tmpSick.getPhone(), tmpSick.getAddress(),
+                    simpleDateFormat.format(tmpSick.getBirthday()), tmpSick.getDiagnosis(),tmpSick.getDoctorId(), tmpSick.getBulkId());
             fileWriter.write(s+'\n');
         }
         fileWriter.flush();

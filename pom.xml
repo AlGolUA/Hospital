@@ -15,7 +15,7 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
     <build>
         <resources>
             <resource>
