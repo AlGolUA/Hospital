@@ -11,7 +11,7 @@ import java.util.List;
 
 public class Database {
     private static final Database instance = new Database();
-    private static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd.MM.YYYY");
+    private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd.MM.yyyy");
 
     private List<Sick> sicks;
     private List<Bulk> bulks;
@@ -44,24 +44,24 @@ public class Database {
         FileWriter fileWriter = new FileWriter(fileName);
         fileWriter.write("Version;1\n");
         fileWriter.write("Bulks;" + bulks.size()+'\n');
-        for (int i = 0; i < bulks.size(); i++) {
-            Bulk tmpBulk = bulks.get(i);
+        for (Bulk tmpBulk : bulks)
+        {
             String s = String.format("%d;%s", tmpBulk.getId(), tmpBulk.getName());
-            fileWriter.write(s+'\n');
+            fileWriter.write(s + '\n');
         }
         fileWriter.write("Doctors;" + doctors.size()+'\n');
-        for (int i = 0; i < doctors.size(); i++) {
-            Doctor tmpDoctor = doctors.get(i);
-            String s = String.format("%d;%s;%s;%s;%s", tmpDoctor.getId(), tmpDoctor.getFirstName(), tmpDoctor.getMiddleName(), tmpDoctor.getLastName(), tmpDoctor.getPhone(), tmpDoctor.getAddress());
-            fileWriter.write(s+'\n');
+        for (Doctor tmpDoctor : doctors)
+        {
+            String s = String.format("%d;%s;%s;%s;%s;%s", tmpDoctor.getId(), tmpDoctor.getFirstName(), tmpDoctor.getMiddleName(), tmpDoctor.getLastName(), tmpDoctor.getPhone(), tmpDoctor.getAddress());
+            fileWriter.write(s + '\n');
         }
         fileWriter.write("Sicks;" + sicks.size()+'\n');
-        for (int i = 0; i < sicks.size(); i++) {
-            Sick tmpSick = sicks.get(i);
+        for (Sick tmpSick : sicks)
+        {
             String s = String.format("%d;%s;%s;%s;%s;%s;%s;%s;%d;%d",
                     tmpSick.getId(), tmpSick.getFirstName(), tmpSick.getMiddleName(), tmpSick.getLastName(), tmpSick.getPhone(), tmpSick.getAddress(),
-                    simpleDateFormat.format(tmpSick.getBirthday()), tmpSick.getDiagnosis(),tmpSick.getDoctorId(), tmpSick.getBulkId());
-            fileWriter.write(s+'\n');
+                    simpleDateFormat.format(tmpSick.getBirthday()), tmpSick.getDiagnosis(), tmpSick.getDoctorId(), tmpSick.getBulkId());
+            fileWriter.write(s + '\n');
         }
         fileWriter.flush();
     }
