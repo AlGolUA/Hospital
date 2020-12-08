@@ -12,35 +12,94 @@ import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
+/**
+ * Тип Database.
+ * Реализующий Singleton паттерн объект, предоставляющий методы для чтения/записи БД, доступ к данными и уникальные ID для новых сущностей
+ */
 public class Database {
     private static final Database instance = new Database();
     private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd.MM.yyyy");
+    private static final String REGEX_DIVIDER = "\\|";
 
     private List<Sick> sicks;
     private List<Bulk> bulks;
     private List<Doctor> doctors;
 
+    private int nextSickId = 1;
+    private int nextBulkId = 1;
+    private int nextDoctorId = 1;
+
+    private Database() {
+    }
+
+    /**
+     * Возвращает singleton объект класса Database.
+     *
+     * @return экземпляр объекта Database
+     */
     public static Database getInstance() {
         return instance;
     }
 
+    /**
+     * Gets sicks.
+     *
+     * @return the sicks
+     */
     public List<Sick> getSicks() {
         if (sicks==null) sicks = new ArrayList<>();
         return sicks;
     }
 
+    /**
+     * Gets bulks.
+     *
+     * @return the bulks
+     */
     public List<Bulk> getBulks() {
         if (bulks==null) bulks = new ArrayList<>();
         return bulks;
     }
 
+    /**
+     * Gets doctors.
+     *
+     * @return the doctors
+     */
     public List<Doctor> getDoctors() {
         if (doctors==null) doctors = new ArrayList<>();
         return doctors;
     }
 
+    /**
+     * Gets next sick id.
+     *
+     * @return the next sick id
+     */
+    public int getNextSickId() {
+        return nextSickId;
+    }
+
+    /**
+     * Gets next bulk id.
+     *
+     * @return the next bulk id
+     */
+    public int getNextBulkId() {
+        return nextBulkId;
+    }
+
+    /**
+     * Gets next doctor id.
+     *
+     * @return the next doctor id
+     */
+    public int getNextDoctorId() {
+        return nextDoctorId;
+    }
+
     private String escape(String s) {
-        return s==null ? "" : s.replaceAll("\\|", "&777;");
+        return s==null ? "" : s.replaceAll(REGEX_DIVIDER, "&777;");
     }
 
     private String escape(Date d) {
@@ -64,6 +123,12 @@ public class Database {
     }
 
 
+    /**
+     * Save to file.
+     *
+     * @param fileName the file name
+     * @throws IOException the io exception
+     */
     public void saveToFile(String fileName) throws IOException {
         FileWriter fileWriter = new FileWriter(fileName);
         fileWriter.write("Version|1\n");
@@ -106,54 +171,68 @@ public class Database {
         fileWriter.flush();
     }
 
-    public void readFromFile(String fileName) {
+    /**
+     * Read from file.
+     *
+     * @param fileName the file name
+     * @throws IOException the io exception
+     */
+    public void readFromFile(String fileName) throws IOException {
         List<Sick> tmpSicks = new ArrayList<>();
         List<Bulk> tmpBulks = new ArrayList<>();
         List<Doctor> tmpDoctors = new ArrayList<>();
+        int maxSickId = 0;
+        int maxBulkId = 0;
+        int maxDoctorId = 0;
         try {
             FileReader fileReader = new FileReader(fileName);
             Scanner scanner = new Scanner(fileReader);
             assert scanner.hasNextLine();
             String s = scanner.nextLine();
-            String[] splited = s.split("\\|",2);
+            String[] splited = s.split(REGEX_DIVIDER,2);
             assert "Version".equals(splited[0]) && "1".equals(splited[1]);
             while (scanner.hasNextLine()) {
                 s = scanner.nextLine();
-                splited = s.split("\\|",2);
+                splited = s.split(REGEX_DIVIDER,2);
                 String model = splited[0];
                 int count = Integer.parseInt(splited[1]);
                 if ("Doctors".equals(model)) {
                     for (int i = 0; i < count; i++) {
                         assert scanner.hasNextLine();
                         s = scanner.nextLine();
-                        splited = s.split("\\|",6);
+                        splited = s.split(REGEX_DIVIDER,6);
+                        Integer id = unescapeInteger(splited[0]);
                         Doctor doctor = new Doctor(
-                                unescapeInteger(splited[0]),
+                                id,
                                 unescapeString(splited[1]),
                                 unescapeString(splited[2]),
                                 unescapeString(splited[3]),
                                 unescapeString(splited[4]),
                                 unescapeString(splited[5]));
                         tmpDoctors.add(doctor);
+                        if (id>maxDoctorId) maxDoctorId=id;
                     }
                 } else if ("Bulks".equals(model)) {
                     for (int i = 0; i < count; i++) {
                         assert scanner.hasNextLine();
                         s = scanner.nextLine();
-                        splited = s.split("\\|",2);
+                        splited = s.split(REGEX_DIVIDER,2);
+                        Integer id = unescapeInteger(splited[0]);
                         Bulk bulk = new Bulk(
-                                unescapeInteger(splited[0]),
+                                id,
                                 unescapeString(splited[1]));
                         tmpBulks.add(bulk);
+                        if (id>maxBulkId) maxBulkId=id;
                     }
                 } else if ("Sicks".equals(model)) {
                     for (int i = 0; i < count; i++) {
                         assert scanner.hasNextLine();
                         s = scanner.nextLine();
-                        splited = s.split("\\|",10);
+                        splited = s.split(REGEX_DIVIDER,10);
                         assert splited.length == 10;
+                        Integer id = unescapeInteger(splited[0]);
                         Sick sick = new Sick(
-                                unescapeInteger(splited[0]),
+                                id,
                                 unescapeString(splited[1]),
                                 unescapeString(splited[2]),
                                 unescapeString(splited[3]),
@@ -164,14 +243,18 @@ public class Database {
                                 unescapeInteger(splited[8]),
                                 unescapeInteger(splited[9]));
                         tmpSicks.add(sick);
+                        if (id>maxSickId) maxSickId=id;
                     }
                 }
             }
             this.sicks = tmpSicks;
             this.doctors = tmpDoctors;
             this.bulks = tmpBulks;
+            this.nextBulkId = maxBulkId + 1;
+            this.nextSickId = maxSickId + 1;
+            this.nextDoctorId = maxDoctorId + 1;
         } catch (AssertionError | Exception e) {
-            throw new RuntimeException("Error reading of database from file " + fileName, e);
+            throw new IOException("Error reading of database from file " + fileName, e);
         }
     };
 }

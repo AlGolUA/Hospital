@@ -16,7 +16,7 @@ import static org.junit.Assert.*;
 public class DatabaseTest {
 
     @Test
-    public void readFromFile() {
+    public void readFromFile() throws IOException {
         Database database = Database.getInstance();
         database.readFromFile("database.txt");
         System.out.println(database.getBulks().size());
